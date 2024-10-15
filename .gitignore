@@ -1,6 +1,8 @@
 # custom
 *.DS_store
 ckpt/
+CARLA_Leaderboard_10
+CARLA_Leaderboard_20
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

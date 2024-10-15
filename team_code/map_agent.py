@@ -21,7 +21,6 @@ import torch
 import torch.nn.functional as F
 import ujson  # Like json but faster
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from config import GlobalConfig
 from filterpy.kalman import MerweScaledSigmaPoints
 from filterpy.kalman import UnscentedKalmanFilter as UKF
@@ -30,7 +29,8 @@ from leaderboard.autoagents import autonomous_agent
 import team_code.models.transfuser_utils as t_u
 from team_code.carla_dataset import CarlaDataset
 from team_code.model import LidarCenterNet
-from team_code.nav_planner import RoutePlanner, extrapolate_waypoint_route
+from team_code.planner.global_route_planner_dao import GlobalRoutePlannerDAO
+from team_code.planner.nav_planner import RoutePlanner, extrapolate_waypoint_route
 from team_code.scenario_logger import ScenarioLogger
 
 # Configure pytorch for maximum performance
@@ -319,11 +319,12 @@ class MapAgent(autonomous_agent.AutonomousAgent):
         # During setup() not everything is available yet, so this _init is a second setup in run_step()
         # Privileged map access for logging and visualizations. Turned off during normal evaluation.
         if self.save_path is not None:
-            from nav_planner import (
-                interpolate_trajectory as i_t,  # pylint: disable=locally-disabled, import-outside-toplevel
-            )
             from srunner.scenariomanager.carla_data_provider import (
                 CarlaDataProvider,  # pylint: disable=locally-disabled, import-outside-toplevel
+            )
+
+            from team_code.planner.nav_planner import (
+                interpolate_trajectory as i_t,  # pylint: disable=locally-disabled, import-outside-toplevel
             )
 
             self.world_map = CarlaDataProvider.get_map()

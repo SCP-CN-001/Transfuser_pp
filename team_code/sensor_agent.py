@@ -26,7 +26,7 @@ import team_code.models.transfuser_utils as t_u
 from team_code.carla_dataset import CarlaDataset
 from team_code.config import GlobalConfig
 from team_code.model import LidarCenterNet
-from team_code.nav_planner import RoutePlanner, extrapolate_waypoint_route
+from team_code.planner.nav_planner import RoutePlanner, extrapolate_waypoint_route
 from team_code.scenario_logger import ScenarioLogger
 
 # Configure pytorch for maximum performance
@@ -201,11 +201,12 @@ class SensorAgent(autonomous_agent.AutonomousAgent):
         # During setup() not everything is available yet, so this _init is a second setup in run_step()
         # Privileged map access for logging and visualizations. Turned off during normal evaluation.
         if self.save_path is not None:
-            from nav_planner import (
-                interpolate_trajectory,  # pylint: disable=locally-disabled, import-outside-toplevel
-            )
             from srunner.scenariomanager.carla_data_provider import (
                 CarlaDataProvider,  # pylint: disable=locally-disabled, import-outside-toplevel
+            )
+
+            from team_code.planner.nav_planner import (
+                interpolate_trajectory,  # pylint: disable=locally-disabled, import-outside-toplevel
             )
 
             self.world_map = CarlaDataProvider.get_map()
