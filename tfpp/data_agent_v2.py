@@ -41,13 +41,11 @@ class DataAgentV2(ExpertAgent):
 
         self.weathers_ids = list(self.config.weathers)
 
-        # Shift applied to the augmentation camera at the current frame [0] and the next frame [1]
-        # Need to buffer because the augmentation set now, will be applied to the next rendered frame.
-        self.augmentation_translation = deque(maxlen=2)
-        self.augmentation_translation.append(0.0)  # Shift at the first frame is 0.0
-        # Rotation is in degrees
-        self.augmentation_rotation = deque(maxlen=2)
-        self.augmentation_rotation.append(0.0)  # Rotation at the first frame is 0.0
+        self.initialized = False
+
+        self._vehicle_lights = (
+            carla.VehicleLightState.Position | carla.VehicleLightState.LowBeam
+        )
 
         if os.environ.get("SAVE_PATH", None) is not None:
             now = datetime.datetime.now()
@@ -86,7 +84,6 @@ class DataAgentV2(ExpertAgent):
         self.last_ego_transform = None
 
     def _init(self, hd_map):
-        super()._init(hd_map)
         if self.datagen:
             self.shuffle_weather()
 
@@ -99,28 +96,30 @@ class DataAgentV2(ExpertAgent):
             "scale_mask_col": 1.0,
         }
 
-        self.stop_sign_criteria = RunStopSign(self._world)
+        self.stop_sign_criteria = RunStopSign(self.world)
         self.ss_bev_manager = ObsManager(obs_config, self.config)
         self.ss_bev_manager.attach_ego_vehicle(
-            self._vehicle, criteria_stop=self.stop_sign_criteria
+            self.ego_vehicle, criteria_stop=self.stop_sign_criteria
         )
 
         self.ss_bev_manager_augmented = ObsManager(obs_config, self.config)
 
         bb_copy = carla.BoundingBox(
-            self._vehicle.bounding_box.location, self._vehicle.bounding_box.extent
+            self.ego_vehicle.bounding_box.location, self.ego_vehicle.bounding_box.extent
         )
         transform_copy = carla.Transform(
-            self._vehicle.get_transform().location,
-            self._vehicle.get_transform().rotation,
+            self.ego_vehicle.get_transform().location,
+            self.ego_vehicle.get_transform().rotation,
         )
         # Can't clone the carla vehicle object, so I use a dummy class with similar attributes.
         self.augmented_vehicle_dummy = t_u.CarlaActorDummy(
-            self._vehicle.get_world(), bb_copy, transform_copy, self._vehicle.id
+            self.ego_vehicle.get_world(), bb_copy, transform_copy, self.ego_vehicle.id
         )
         self.ss_bev_manager_augmented.attach_ego_vehicle(
             self.augmented_vehicle_dummy, criteria_stop=self.stop_sign_criteria
         )
+
+        self.initialized = True
 
     def sensors(self):
         sensors = super().sensors()
@@ -253,7 +252,7 @@ class DataAgentV2(ExpertAgent):
         # The 10 Hz LiDAR only delivers half a sweep each time step at 20 Hz.
         # Here we combine the 2 sweeps into the same coordinate system
         if self.last_lidar is not None:
-            ego_transform = self._vehicle.get_transform()
+            ego_transform = self.ego_vehicle.get_transform()
             ego_location = ego_transform.location
             last_ego_location = self.last_ego_transform.location
             relative_translation = np.array(
@@ -291,7 +290,7 @@ class DataAgentV2(ExpertAgent):
 
         bounding_boxes = self.get_bounding_boxes(lidar=lidar_360)
 
-        self.stop_sign_criteria.tick(self._vehicle)
+        self.stop_sign_criteria.tick(self.ego_vehicle)
         bev_semantics = self.ss_bev_manager.get_observation(self.close_traffic_lights)
         bev_semantics_augmented = self.ss_bev_manager_augmented.get_observation(
             self.close_traffic_lights
@@ -321,16 +320,15 @@ class DataAgentV2(ExpertAgent):
 
     @torch.inference_mode()
     def run_step(self, input_data, timestamp, sensors=None, plant=False):
+        if not self.initialized:
+            if "hd_map" in input_data.keys():
+                self._init(input_data["hd_map"])
+
+        control = super().run_step(input_data, timestamp)
         # Convert LiDAR into the coordinate frame of the ego vehicle
         input_data["lidar"] = t_u.lidar_to_ego_coordinate(
             self.config, input_data["lidar"]
         )
-
-        # Must be called before run_step, so that the correct augmentation shift is saved
-        if self.datagen:
-            self.augment_camera(sensors)
-
-        control = super().run_step(input_data, timestamp)
 
         tick_data = self.tick(input_data)
 
@@ -339,68 +337,13 @@ class DataAgentV2(ExpertAgent):
                 self.save_sensors(tick_data)
 
         self.last_lidar = input_data["lidar"]
-        self.last_ego_transform = self._vehicle.get_transform()
+        self.last_ego_transform = self.ego_vehicle.get_transform()
 
         if plant:
             # Control contains data when run with plant
             return {**tick_data, **control}
         else:
             return control
-
-    def augment_camera(self, sensors):
-        augmentation_translation = np.random.uniform(
-            low=self.config.camera_translation_augmentation_min,
-            high=self.config.camera_translation_augmentation_max,
-        )
-        augmentation_rotation = np.random.uniform(
-            low=self.config.camera_rotation_augmentation_min,
-            high=self.config.camera_rotation_augmentation_max,
-        )
-        self.augmentation_translation.append(augmentation_translation)
-        self.augmentation_rotation.append(augmentation_rotation)
-        for sensor in sensors:
-            if (
-                "rgb_augmented" in sensor[0]
-                or "semantics_augmented" in sensor[0]
-                or "depth_augmented" in sensor[0]
-            ):
-                camera_pos_augmented = carla.Location(
-                    x=self.config.camera_pos[0],
-                    y=self.config.camera_pos[1] + augmentation_translation,
-                    z=self.config.camera_pos[2],
-                )
-
-                camera_rot_augmented = carla.Rotation(
-                    pitch=self.config.camera_rot_0[0],
-                    yaw=self.config.camera_rot_0[1] + augmentation_rotation,
-                    roll=self.config.camera_rot_0[2],
-                )
-
-                camera_augmented_transform = carla.Transform(
-                    camera_pos_augmented, camera_rot_augmented
-                )
-
-                sensor[1].set_transform(camera_augmented_transform)
-
-        # Update dummy vehicle
-        if self.initialized:
-            # We are still rendering the map for the current frame, so we need to use the translation from the last frame.
-            last_translation = self.augmentation_translation[0]
-            last_rotation = self.augmentation_rotation[0]
-            bb_copy = carla.BoundingBox(
-                self._vehicle.bounding_box.location, self._vehicle.bounding_box.extent
-            )
-            transform_copy = carla.Transform(
-                self._vehicle.get_transform().location,
-                self._vehicle.get_transform().rotation,
-            )
-            augmented_loc = transform_copy.transform(
-                carla.Location(0.0, last_translation, 0.0)
-            )
-            transform_copy.location = augmented_loc
-            transform_copy.rotation.yaw = transform_copy.rotation.yaw + last_rotation
-            self.augmented_vehicle_dummy.bounding_box = bb_copy
-            self.augmented_vehicle_dummy.transform = transform_copy
 
     def shuffle_weather(self):
         # change weather for visual diversity
@@ -412,10 +355,10 @@ class DataAgentV2(ExpertAgent):
         weather = self.config.weathers[self.weathers_ids[index]]
         weather.sun_altitude_angle = altitude
         weather.sun_azimuth_angle = np.random.choice(self.config.azimuths)
-        self._world.set_weather(weather)
+        self.world.set_weather(weather)
 
         # night mode
-        vehicles = self._world.get_actors().filter("*vehicle*")
+        vehicles = self.world.get_actors().filter("*vehicle*")
         if weather.sun_altitude_angle < 0.0:
             for vehicle in vehicles:
                 vehicle.set_light_state(carla.VehicleLightState(self._vehicle_lights))
@@ -490,12 +433,12 @@ class DataAgentV2(ExpertAgent):
     def get_bounding_boxes(self, lidar=None):
         results = []
 
-        ego_transform = self._vehicle.get_transform()
-        ego_control = self._vehicle.get_control()
-        ego_velocity = self._vehicle.get_velocity()
+        ego_transform = self.ego_vehicle.get_transform()
+        ego_control = self.ego_vehicle.get_control()
+        ego_velocity = self.ego_vehicle.get_velocity()
         ego_matrix = np.array(ego_transform.get_matrix())
         ego_rotation = ego_transform.rotation
-        ego_extent = self._vehicle.bounding_box.extent
+        ego_extent = self.ego_vehicle.bounding_box.extent
         ego_speed = self._get_forward_speed(
             transform=ego_transform, velocity=ego_velocity
         )
@@ -515,20 +458,20 @@ class DataAgentV2(ExpertAgent):
             "distance": -1,
             "speed": ego_speed,
             "brake": ego_brake,
-            "id": int(self._vehicle.id),
+            "id": int(self.ego_vehicle.id),
             "matrix": ego_transform.get_matrix(),
         }
         results.append(result)
 
-        self._actors = self._world.get_actors()
+        self._actors = self.world.get_actors()
         vehicles = self._actors.filter("*vehicle*")
 
         for vehicle in vehicles:
             if (
-                vehicle.get_location().distance(self._vehicle.get_location())
+                vehicle.get_location().distance(self.ego_vehicle.get_location())
                 < self.config.bb_save_radius
             ):
-                if vehicle.id != self._vehicle.id:
+                if vehicle.id != self.ego_vehicle.id:
                     vehicle_transform = vehicle.get_transform()
                     vehicle_rotation = vehicle_transform.rotation
                     vehicle_matrix = np.array(vehicle_transform.get_matrix())
@@ -580,7 +523,7 @@ class DataAgentV2(ExpertAgent):
         walkers = self._actors.filter("*walker*")
         for walker in walkers:
             if (
-                walker.get_location().distance(self._vehicle.get_location())
+                walker.get_location().distance(self.ego_vehicle.get_location())
                 < self.config.bb_save_radius
             ):
                 walker_transform = walker.get_transform()
@@ -732,3 +675,19 @@ class DataAgentV2(ExpertAgent):
         final = np.concatenate((visu_img, rendered), axis=0)
 
         Image.fromarray(final).save(self.save_path / (f"{self.step:04}.jpg"))
+
+    def _get_forward_speed(self, transform=None, velocity=None):
+        """Convert the vehicle transform directly to forward speed"""
+        if not velocity:
+            velocity = self.ego_vehicle.get_velocity()
+        if not transform:
+            transform = self.ego_vehicle.get_transform()
+
+        vel_np = np.array([velocity.x, velocity.y, velocity.z])
+        pitch = np.deg2rad(transform.rotation.pitch)
+        yaw = np.deg2rad(transform.rotation.yaw)
+        orientation = np.array(
+            [np.cos(pitch) * np.cos(yaw), np.cos(pitch) * np.sin(yaw), np.sin(pitch)]
+        )
+        speed = np.dot(vel_np, orientation)
+        return speed

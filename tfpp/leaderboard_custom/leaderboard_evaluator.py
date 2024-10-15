@@ -26,14 +26,14 @@ import carla
 import numpy.random as random
 import pkg_resources
 from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
-from leaderboard.scenarios.route_scenario_local import RouteScenario
-from leaderboard.scenarios.scenario_manager_local import ScenarioManager
 from leaderboard.utils.route_indexer import RouteIndexer
 from srunner.scenariomanager.carla_data_provider import *
 from srunner.scenariomanager.timer import GameTime
 from srunner.scenariomanager.watchdog import Watchdog
 
 from tfpp.leaderboard_custom.autoagents.agent_wrapper import AgentError, AgentWrapper
+from tfpp.leaderboard_custom.scenarios.route_scenario import RouteScenario
+from tfpp.leaderboard_custom.scenarios.scenario_manager import ScenarioManager
 from tfpp.leaderboard_custom.utils.statistics_manager import StatisticsManager
 
 sensors_to_icons = {

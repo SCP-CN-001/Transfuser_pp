@@ -129,7 +129,7 @@ class GlobalConfig:
         self.num_lidar_hits_for_detection = 7
         # How many pixels make up 1 meter.
         # 1 / pixels_per_meter = size of pixel in meters
-        self.pixels_per_meter = 4.0
+        self.pixels_per_meter = 2.0
         # Max number of LiDAR points per pixel in voxelized LiDAR
         self.hist_max_per_pixel = 5
         # Height at which the LiDAR points are split into the 2 channels.
