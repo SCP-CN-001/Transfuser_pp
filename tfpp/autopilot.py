@@ -13,7 +13,6 @@ from collections import defaultdict, deque
 
 import carla
 import numpy as np
-import transfuser_utils as t_u
 import ujson
 from config import GlobalConfig
 from leaderboard.autoagents import autonomous_agent, autonomous_agent_local
@@ -25,6 +24,8 @@ from nav_planner import (
 )
 from scenario_logger import ScenarioLogger
 from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
+
+import tfpp.models.transfuser_utils as t_u
 
 
 def get_entry_point():

@@ -18,7 +18,7 @@ import torch
 from PIL import Image
 
 import tfpp.models.transfuser_utils as t_u
-from carla_autopilot.expert_agent import ExpertAgent
+from tfpp.autopilot_v2 import AutoPilotV2
 from tfpp.birds_eye_view.chauffeurnet import ObsManager
 from tfpp.birds_eye_view.run_stop_sign import RunStopSign
 from tfpp.config import GlobalConfig
@@ -28,7 +28,7 @@ def get_entry_point():
     return "DataAgentV2"
 
 
-class DataAgentV2(ExpertAgent):
+class DataAgentV2(AutoPilotV2):
     """
     Child of the autopilot that additionally runs data collection and storage.
     """
@@ -38,7 +38,6 @@ class DataAgentV2(ExpertAgent):
 
         self.config = GlobalConfig()
         self.datagen = int(os.environ.get("DATAGEN", 0)) == 1
-
         self.weathers_ids = list(self.config.weathers)
 
         self.initialized = False
@@ -62,9 +61,6 @@ class DataAgentV2(ExpertAgent):
             self.save_path = pathlib.Path(os.environ["SAVE_PATH"]) / string
             self.save_path.mkdir(parents=True, exist_ok=False)
 
-            if self.datagen:
-                (self.save_path / "measurements").mkdir()
-
         if self.save_path is not None and self.datagen:
             (self.save_path / "lidar").mkdir()
             (self.save_path / "rgb").mkdir()
@@ -76,6 +72,7 @@ class DataAgentV2(ExpertAgent):
             (self.save_path / "bev_semantics").mkdir()
             (self.save_path / "bev_semantics_augmented").mkdir()
             (self.save_path / "boxes").mkdir()
+            (self.save_path / "measurements").mkdir()
 
         self.tmp_visu = int(os.environ.get("TMP_VISU", 0))
 
