@@ -26,9 +26,9 @@
 
 ### Pre-trained Models
 
-`autonomousvision/carla_garage` has provide a set of pretrained models [here](https://s3.eu-central-1.amazonaws.com/avg-projects-2/jaeger2023arxiv/models/pretrained_models.zip). The models are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). These are the final model weights used in the paper, the folder indicates the benchmark. For the training and validation towns, we provide 3 models which correspond to 3 different training seeds. The format is `approach_trainingsetting_seed`. Each folder has an `args.txt` containing the training settings in text, a `config.pickle` containing all hyperparameters for the code and a `model_0030.pth` containing the model weights. Additionally, there are training logs for most models.
+[autonomousvision/carla_garage](https://github.com/autonomousvision/carla_garage) has provide a set of pretrained models [here](https://s3.eu-central-1.amazonaws.com/avg-projects-2/jaeger2023arxiv/models/pretrained_models.zip). The models are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). These are the final model weights used in the paper, the folder indicates the benchmark. For the training and validation towns, we provide 3 models which correspond to 3 different training seeds. The format is `approach_trainingsetting_seed`. Each folder has an `args.txt` containing the training settings in text, a `config.pickle` containing all hyperparameters for the code and a `model_0030.pth` containing the model weights. Additionally, there are training logs for most models.
 
-We assume you have downloaded the pretrained models and extracted them to `./ckpt`. The folder structure should look like this:
+We assume you have downloaded the pre-trained models and extracted them to `./ckpt`. The folder structure should look like this:
 
 ```shell
 ./ckpt
@@ -46,6 +46,8 @@ We assume you have downloaded the pretrained models and extracted them to `./ckp
     ├── tfpp_all_1
     └── tfpp_all_2
 ```
+
+With the pre-trained models, you can directly run the evaluation script without training. Otherwise, see () for training.
 
 ### Evaluation
 
