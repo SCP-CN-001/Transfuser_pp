@@ -1,9 +1,9 @@
 #!/bin/bash
 export SHELL_PATH=$(dirname $(readlink -f $0))
 export WORKSPACE=${SHELL_PATH}/..
-export CARLA_ROOT=${WORKSPACE}/CARLA_Leaderboard_10
-export LEADERBOARD_ROOT=${WORKSPACE}/leaderboard_10/leaderboard
-export SCENARIO_RUNNER_ROOT=${WORKSPACE}/leaderboard_10/scenario_runner
+export CARLA_ROOT=${WORKSPACE}/CARLA_Leaderboard_20
+export LEADERBOARD_ROOT=${WORKSPACE}/leaderboard_20/leaderboard
+export SCENARIO_RUNNER_ROOT=${WORKSPACE}/leaderboard_20/scenario_runner
 
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla/dist/carla-0.9.10-py3.7-linux-x86_64.egg

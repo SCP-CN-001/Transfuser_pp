@@ -1,5 +1,6 @@
-# macOS files
+# custom
 *.DS_store
+ckpt/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
