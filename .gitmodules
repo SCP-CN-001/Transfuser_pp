@@ -6,6 +6,3 @@
 	path = leaderboard_10/scenario_runner
 	url = git@github.com:carla-simulator/scenario_runner.git
 	branch = leaderboard-1.0
-[submodule "carla_autopilot"]
-	path = carla_autopilot
-	url = git@github.com:SCP-CN-001/carla_autopilot.git
