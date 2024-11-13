@@ -86,20 +86,21 @@ class CarlaDataset(Dataset):  # pylint: disable=locally-disabled, invalid-name
             for route in routes:
                 route_dir = sub_root + "/" + route
 
-                if not os.path.isfile(route_dir + "/results.json.gz"):
-                    total_routes += 1
-                    crashed_routes += 1
-                    continue
 
-                with gzip.open(
-                    route_dir + "/results.json.gz", "rt", encoding="utf-8"
-                ) as f:
-                    total_routes += 1
-                    results_route = ujson.load(f)
+                # if not os.path.isfile(route_dir + "/results.json.gz"):
+                #     total_routes += 1
+                #     crashed_routes += 1
+                #     continue
+
+                # with gzip.open(
+                #     route_dir + "/results.json.gz", "rt", encoding="utf-8"
+                # ) as f:
+                #     total_routes += 1
+                #     results_route = ujson.load(f)
 
                 # We skip data where the expert did not achieve perfect driving score
-                if results_route["scores"]["score_composed"] < 100.0:
-                    continue
+                # if results_route["scores"]["score_composed"] < 100.0:
+                #     continue
 
                 perfect_routes += 1
 
@@ -1009,7 +1010,10 @@ class CarlaDataset(Dataset):  # pylint: disable=locally-disabled, invalid-name
             velocity_target[0, cty_int, ctx_int] = gt_bboxes[j, 5]
             # Brakes can potentially be continous but we classify them now.
             # Using mathematical rounding the split is applied at 0.5
-            brake_target[0, cty_int, ctx_int] = int(round(gt_bboxes[j, 6]))
+            try:
+                brake_target[0, cty_int, ctx_int] = int(round(gt_bboxes[j, 6]))
+            except:
+                brake_target[0, cty_int, ctx_int] = int(0)
 
             offset_target[0, cty_int, ctx_int] = ctx - ctx_int
             offset_target[1, cty_int, ctx_int] = cty - cty_int

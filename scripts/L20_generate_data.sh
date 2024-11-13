@@ -24,14 +24,8 @@ export ROUTES_SUBSET=0
 REPETITIONS=1
 
 # agent-related options
-CHALLENGE_TRACK_CODENAME=MAP
-TEAM_AGENT=${WORKSPACE}/tfpp/data_agent_v2.py
-TEAM_CONFIG=${AUTOPILOT_ROOT}/carla_autopilot/configs/expert_agent.yaml
-RESUME=0
-CHECKPOINT_ENDPOINT=${WORKSPACE}/logs/L20_training/log_route_${ROUTES_SUBSET}.json
-
 export DATAGEN=1
-export SAVE_PATH=${WORKSPACE}/data/Routes_${ROUTES_SUBSET}_Repetition${REPETITIONS}
+export SAVE_PATH=${WORKSPACE}/data/Town12/Routes_training_Repetition${REPETITIONS}
 export PYTHON_FILE=${AUTOPILOT_ROOT}/carla_autopilot/leaderboard_custom/leaderboard_evaluator.py
 
 python3 ${PYTHON_FILE} \

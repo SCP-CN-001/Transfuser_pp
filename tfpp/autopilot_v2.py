@@ -408,6 +408,7 @@ class AutoPilotV2(AutonomousAgent):
             )
 
         target_speed = min(target_speed, target_speed_route_obstacle)
+        target_speed = min(target_speed, self.configs.target_speed_fast)
 
         # Determine if the ego vehicle is at a junction
         ego_waypoint = self.world_map.get_waypoint(self.ego_vehicle.get_location())
@@ -2164,10 +2165,8 @@ class AutoPilotV2(AutonomousAgent):
         ):
             measurements_file = self.save_path / "measurements" / f"{frame:04}.json.gz"
             for key, value in data.items():
-                if isinstance(value, bool):
-                    data[key] = 0 if value is False else 1
-            if data["brake"] != 1:
-                data["brake"] = 0
+                if isinstance(value, np.bool_):
+                    data[key] = bool(value)
             with gzip.open(measurements_file, "wt", encoding="utf-8") as f:
                 ujson.dump(data, f, indent=4)
 

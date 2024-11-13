@@ -2,8 +2,10 @@
 export SHELL_PATH=$(dirname $(readlink -f $0))
 export WORKSPACE=${SHELL_PATH}/..
 export CARLA_ROOT=${WORKSPACE}/CARLA_Leaderboard_20
-export LEADERBOARD_ROOT=${WORKSPACE}/leaderboard_20/leaderboard
-export SCENARIO_RUNNER_ROOT=${WORKSPACE}/leaderboard_20/scenario_runner
+
+export AUTOPILOT_ROOT=${WORKSPACE}/carla_autopilot
+export LEADERBOARD_ROOT=${AUTOPILOT_ROOT}/leaderboard_20/leaderboard
+export SCENARIO_RUNNER_ROOT=${AUTOPILOT_ROOT}/leaderboard_20/scenario_runner
 
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
 export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg
@@ -17,13 +19,13 @@ TM_PORT=2500
 DEBUG_CHALLENGE=0
 
 ROUTES=${LEADERBOARD_ROOT}/data/routes_validation.xml
-ROUTES_SUBSET=0
+ROUTES_SUBSET=3
 REPETITIONS=1
 
 # agent-related options
 CHALLENGE_TRACK_CODENAME=SENSORS
 TEAM_AGENT=${WORKSPACE}/team_code/sensor_agent.py
-TEAM_CONFIG=${WORKSPACE}/ckpt/lav/tfpp_02_05_withheld_0
+TEAM_CONFIG=${WORKSPACE}/ckpt/L20
 RESUME=0
 CHECKPOINT_ENDPOINT=${WORKSPACE}/logs/L20_validation/log_route_${ROUTES_SUBSET}.json
 

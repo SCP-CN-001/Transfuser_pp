@@ -21,7 +21,7 @@ import tfpp.models.transfuser_utils as t_u
 from tfpp.autopilot_v2 import AutoPilotV2
 from tfpp.birds_eye_view.chauffeurnet import ObsManager
 from tfpp.birds_eye_view.run_stop_sign import RunStopSign
-from tfpp.config import GlobalConfig
+from tfpp.config_v2 import GlobalConfig
 
 
 def get_entry_point():
@@ -81,8 +81,8 @@ class DataAgentV2(AutoPilotV2):
         self.last_ego_transform = None
 
     def _init(self, hd_map):
-        if self.datagen:
-            self.shuffle_weather()
+        # if self.datagen:
+        #     self.shuffle_weather()
 
         obs_config = {
             "width_in_pixels": self.config.lidar_resolution_width,
