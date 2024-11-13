@@ -3,6 +3,9 @@ The main model structure
 """
 import math
 import os
+
+os.environ['CUDA_LAUNCH_BLOCKING']="1"
+
 from copy import deepcopy
 from pathlib import Path
 

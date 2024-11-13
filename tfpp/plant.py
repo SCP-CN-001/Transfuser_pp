@@ -16,7 +16,7 @@ from torch import nn
 import tfpp.models.transfuser_utils as t_u
 from tfpp.model import GRUWaypointsPredictorInterFuser
 from tfpp.models.focal_loss import FocalLoss
-from tfpp.models.transformers import AutoConfig, AutoModel
+from transformers import AutoConfig, AutoModel
 
 logger = logging.getLogger(__name__)
 

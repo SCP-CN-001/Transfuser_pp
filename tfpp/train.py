@@ -29,7 +29,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from tfpp.carla_dataset import CarlaDataset
-from tfpp.config import GlobalConfig
+from tfpp.config_v2 import GlobalConfig
 from tfpp.model import LidarCenterNet
 from tfpp.plant import PlanT
 
@@ -845,7 +845,7 @@ class Engine:
         device,
         scheduler,
         scaler,
-        rank=0,
+        rank=0,                                          
         world_size=1,
         cur_epoch=0,
     ):

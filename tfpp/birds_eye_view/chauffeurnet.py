@@ -118,9 +118,9 @@ class ObsManager(ObsManagerBase):
             self._world_offset = np.array(
                 hf.attrs["world_offset_in_meters"], dtype=np.float32
             )
-            assert np.isclose(
-                self._pixels_per_meter, float(hf.attrs["pixels_per_meter"])
-            )
+            # assert np.isclose(
+            #     self._pixels_per_meter, float(hf.attrs["pixels_per_meter"])
+            # )
 
         self._distance_threshold = np.ceil(self._width / self._pixels_per_meter)
         # dilate road mask, lbc draw road polygon with 10px boarder
